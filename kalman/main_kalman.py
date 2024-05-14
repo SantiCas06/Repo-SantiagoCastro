@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 from sort import Sort
 
+
 def object_tracking():
-    cap = cv2.VideoCapture('kalman/test.mp4')
+    cap = cv2.VideoCapture("kalman/test.mp4")
     prev_frame_time = 0
     new_frame_time = 0
     object_detector = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=40)
@@ -32,13 +33,22 @@ def object_tracking():
         for d in trackers:
             x1, y1, x2, y2, track_id = map(int, d)
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            cv2.putText(frame, str(track_id), (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), thickness=2)
-        cv2.imshow('view', frame)
+            cv2.putText(
+                frame,
+                str(track_id),
+                (x1, y1 - 10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                2,
+                (0, 255, 0),
+                thickness=2,
+            )
+        cv2.imshow("view", frame)
         key = cv2.waitKey(1)
         if key == 27:
             break
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     object_tracking()

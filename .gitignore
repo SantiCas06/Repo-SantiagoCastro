@@ -4,3 +4,6 @@ __pycache__/
 ffbuild/
 fftools/
 tools/
+Filters/audio_filter.py
+kalman/main_kalman.py
+kalman/sort.py

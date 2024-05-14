@@ -1,29 +1,32 @@
-#Libraries 
+# Libraries
 import matplotlib.pyplot as plt
 import numpy as np
-#import pydub
+
+# import pydub
 from playsound import playsound
 from scipy.io import wavfile
-#from pydub import AudioSegment
 
-#pydub.AudioSegment.ffmpeg = "D:/PYTHON VIRTUAL ENVS/ffmpeg-7.0"
+# from pydub import AudioSegment
+
+
+# pydub.AudioSegment.ffmpeg = "D:/PYTHON VIRTUAL ENVS/ffmpeg-7.0"
 def audio_filter(ruta_archivo):
-    #Play audio
+    # Play audio
     playsound(ruta_archivo)
-    #Read audio file
+    # Read audio file
     sampFreq, sound = wavfile.read(ruta_archivo)
     # Resto del procesamiento de audio...
 
     print(sound.dtype, sampFreq)
 
-        # Normalice audio to b between - 1 to 1
-    sound = sound / 2.0 ** 15
+    # Normalice audio to b between - 1 to 1
+    sound = sound / 2.0**15
 
     # Just one channel
     sound = sound[:, 0]
 
     # Measure in seconds
-    length_in_s  = sound.shape[0] / sampFreq
+    length_in_s = sound.shape[0] / sampFreq
     print("Audio length in seconds: ", length_in_s)
 
     # Audio plot
@@ -69,12 +72,12 @@ def audio_filter(ruta_archivo):
     for i, f in enumerate(freq):
         if f > 5900 and f < 6100:
             fft_spectrum[i] = 0.0
-    
+
     noiseless_signal = np.fft.irfft(fft_spectrum)
 
     # Guardar audio con ruido en formato WAV
     wavfile.write(r"Noisy_Audio.wav", sampFreq, signal)
-    
+
     # Audio plot
     plt.plot(time, noiseless_signal, "r")
     plt.xlabel("Time signal [s]")
@@ -83,8 +86,8 @@ def audio_filter(ruta_archivo):
 
     wavfile.write(r"Noisy Audio.wav", sampFreq, signal)
     wavfile.write(r"Clean Audio.wav", sampFreq, noiseless_signal)
-    #playsound("Noisy Audio.wav", 'latin1')
-    #playsound("Noiseless Audio.wav")
+    # playsound("Noisy Audio.wav", 'latin1')
+    # playsound("Noiseless Audio.wav")
 
     """
     # Guardar audio con ruido en formato MP3

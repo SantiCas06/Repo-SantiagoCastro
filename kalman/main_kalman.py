@@ -1,54 +1,66 @@
+"""main_kalman.py"""
 import cv2
 import numpy as np
+import torch
 from sort import Sort
+
+# Cargar el modelo YOLOv5 preentrenado desde la biblioteca de Ultralytics
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 
 def object_tracking():
-    cap = cv2.VideoCapture("kalman/test.mp4")
-    prev_frame_time = 0
-    new_frame_time = 0
-    object_detector = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=40)
-    mot_tracker = Sort()
+    """ Realizar el seguimiento de objetos en un video con YOLOv5 y SORT"""
+    # Cargar el video de prueba
+
+    cap = cv2.VideoCapture(r"Repo-SantiagoCastro\kalman\test.mp4")
+    if not cap.isOpened():
+        print(f"Error: No se puede abrir el archivo de video")
+        return
+    # Inicializar el rastreador SORT
+    tracker = Sort()
 
     while True:
+        """  Bucle principal para realizar el seguimiento de objetos en un video"""
+        # Leer un frame del video
         ret, frame = cap.read()
-
         if not ret:
             break
 
-        mask = object_detector.apply(frame)
-        _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
-        mask = cv2.GaussianBlur(mask, (5, 5), 0)
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        dets = []
+        # Realizar la detección de objetos con YOLOv5
+        results = model(frame)
+        results = results.xyxy[0].numpy()
+        # Filtrar solo las detecciones de personas (clase 0 en COCO)
+        people_detections = results[results[:, 5] == 0]
 
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if area > 2000:
-                x, y, w, h = cv2.boundingRect(cnt)
-                dets.append([x, y, x + w, y + h, 1.0])
-                cv2.drawContours(frame, [cnt], -1, (0, 0, 255), 2)
-        dets = np.array(dets)
-        trackers = mot_tracker.update(dets)
-        for d in trackers:
-            x1, y1, x2, y2, track_id = map(int, d)
+        detections = []
+        for *bbox, conf, cls in people_detections:
+            """ Crear una lista de detecciones en el formato [x1, y1, x2, y2, conf]"""
+            x1, y1, x2, y2 = map(int, bbox)
+            detections.append([x1, y1, x2, y2, conf])
+        detections = np.array(detections)
+
+        # Actualizar el rastreador con las nuevas detecciones
+        tracked_objects = tracker.update(detections)
+
+        for obj in tracked_objects:
+            """ Iterar sobre los objetos rastreados"""
+            x1, y1, x2, y2, obj_id = map(int, obj[:5])
+            # Dibujar los rectángulos alrededor de los objetos rastreados
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-            cv2.putText(
-                frame,
-                str(track_id),
-                (x1, y1 - 10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                2,
-                (0, 255, 0),
-                thickness=2,
-            )
+            # Poner el ID del objeto rastreado en el frame
+            cv2.putText(frame, str(obj_id), (x1, y1 - 10), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
+
+        # Mostrar el frame con las anotaciones
         cv2.imshow("view", frame)
-        key = cv2.waitKey(1)
-        if key == 27:
+
+
+        # Salir del bucle si se presiona la tecla Esc
+        if cv2.waitKey(1) == 27:
+            """ Salir del bucle si se presiona la tecla Esc"""
             break
+
     cap.release()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     object_tracking()
